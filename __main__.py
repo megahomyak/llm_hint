@@ -14,12 +14,19 @@ def read(file_path):
 for file_path in file_paths:
     file_content = read(file_path)
     entry = f"{file_path}:\n\n" + "\n".join(
-        f"{index} | {line}"
+        f"{index}|{line}"
         for index, line in enumerate(file_content.splitlines(), start=1)
     )
     entries.append(entry)
 
-prompt = "\n\n".join(entries) + "\n\nSuggest what to place instead of the comment that starts with \"x/\". The instructions for what you need to do are in the same comment (maybe it spans several lines). Respond only in plain code, no surrounding text (except for explanation comments, if any), no markup, nothing. Just code that can go in place of the comment. Also, immediately before your code response, add one line with the file path and the line number of the comment beginning and end in the format of path/to/file:beginning:end (like main.rs:12:15)"
+prompt = "\n\n".join(entries) + """\n\nReplace the comment that starts with "x/" with code. Respond in the following format (omit the block of code backticks):
+
+```
+script.py:12:15 // Which file the comment is in, what line it begins on and what line it ends at
+code that should go as a replacement of the comment
+```
+
+Do not annotate your response. Respect the source file's indentation when writing your replacement. When writing line numbers, get them from line number prefixes that are *before* every line (that is, to know a number for a line, look at the number that was *before* the line). The numbers should be inclusive on both ends, so if the first line of the comment is on the line 12 and the last line of the comment is on line 15, you should use 12 and 15 as the line numbers"""
 
 groq_client = groq.Groq(api_key=read(pathlib.Path(__file__).parent/"token.txt").strip())
 completion = groq_client.chat.completions.create(
@@ -32,4 +39,24 @@ completion = groq_client.chat.completions.create(
     ]
 )
 placement, replacement = completion.choices[0].message.content.split("\n", maxsplit=1)
-print(replacement)
+
+print(f"Placement: {placement}")
+print(f"Replacement:\n{replacement}")
+print()
+input("Is this fine?")
+
+file_path, start, end = placement.split(":")
+start = int(start)
+end = int(end)
+file_content = read(file_path)
+final = []
+for line_number, line in enumerate(file_content.split("\n"), start=1):
+    if line_number == start:
+        final.append(replacement)
+    elif start < line_number <= end:
+        pass
+    else:
+        final.append(line)
+
+with open(file_path, "w", encoding="utf-8") as f:
+    f.write("\n".join(final))
