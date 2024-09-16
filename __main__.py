@@ -19,7 +19,7 @@ for file_path in file_paths:
     )
     entries.append(entry)
 
-prompt = "\n\n".join(entries) + "\n\nSuggest what to place instead of the comment that starts with \"x/\". The instructions for what you need to do are in the same comment (maybe it spans several lines). Respond only in plain code, no surrounding text (except for explanation comments, if any), no markup, nothing. Just code that can go in place of the comment. Also, immediately before your code response, add two lines with the file path and the line number of the comment in the format of path/to/file:linenumber. The first line should be for the beginning of the comment, the second line should be for the end of the comment"
+prompt = "\n\n".join(entries) + "\n\nSuggest what to place instead of the comment that starts with \"x/\". The instructions for what you need to do are in the same comment (maybe it spans several lines). Respond only in plain code, no surrounding text (except for explanation comments, if any), no markup, nothing. Just code that can go in place of the comment. Also, immediately before your code response, add one line with the file path and the line number of the comment beginning and end in the format of path/to/file:beginning:end (like main.rs:12:15)"
 
 groq_client = groq.Groq(api_key=read(pathlib.Path(__file__).parent/"token.txt").strip())
 completion = groq_client.chat.completions.create(
@@ -31,5 +31,5 @@ completion = groq_client.chat.completions.create(
         }
     ]
 )
-replacement = completion.choices[0].message.content
+placement, replacement = completion.choices[0].message.content.split("\n", maxsplit=1)
 print(replacement)
