@@ -16,36 +16,24 @@ for file_path in file_paths:
     file_content = read(file_path)
     entry = "\n".join(
         f"{file_path}:{index}|{line}"
-        for index, line in enumerate(file_content.split(), start=1)
+        for index, line in enumerate(file_content.split("\n"), start=1)
     )
     entries.append(entry)
 
 prompt = "\n\n".join(entries) + "\n\nPerfectly recite all the lines with the comment that starts with \"x\" and the comments immediately following it, preserving line prefixes and indentation. After the recital, add lines that resolve the problem from the comment, and only add the lines that will be placed instead of the comment. Do not accidentally add extra lines into your response, only cover the place with comments. Do not commentate your response"
 
-#groq_client = groq.Groq(api_key=read(pathlib.Path(__file__).parent/"token.txt").strip())
-#completion = groq_client.chat.completions.create(
-#    model="llama3-70b-8192",
-#    messages=[
-#        {
-#            "content": prompt,
-#
-#            "role": "user"
-#        }
-#    ]
-#)
-#replacement = completion.choices[0].message.content
-replacement = """start.ts:34|        //x/how to map all the handlers' descriptions into something like
-start.ts:35|        ///name - description
-start.ts:36|        ///name - description
-start.ts:37|
+groq_client = groq.Groq(api_key=read(pathlib.Path(__file__).parent/"token.txt").strip())
+completion = groq_client.chat.completions.create(
+    model="llama3-70b-8192",
+    messages=[
+        {
+            "content": prompt,
 
-To resolve the problem, you can use the following code:
-
-start.ts:34|        let helpMessage = '';
-start.ts:35|        for (const [name, command] of this.handlers.entries()) {
-start.ts:36|            helpMessage += `${name} - ${command.description}\\n`;
-start.ts:37|        }
-start.ts:38|        return helpMessage;"""
+            "role": "user"
+        }
+    ]
+)
+replacement = completion.choices[0].message.content
 
 def list_replace(item_number, amount, input_list, replacement_list):
     output_list = input_list.copy()
