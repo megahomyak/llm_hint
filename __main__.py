@@ -20,7 +20,7 @@ for file_path in file_paths:
     )
     entries.append(entry)
 
-prompt = "\n\n".join(entries) + "\n\nPerfectly recite all the lines with the comment that starts with \"x\" and the comments immediately following it, preserving line prefixes and indentation. After the recital, add lines that resolve the problem from the comment, and only add the lines that will be placed instead of the comment. Do not accidentally add extra lines into your response, only cover the place with comments. Do not commentate your response"
+prompt = "\n\n".join(entries) + "\n\nPerfectly recite all the lines with the comment that starts with \"x\" and the comments immediately following it, preserving line prefixes and indentation. After the recital, add lines that resolve the problem from the comment, and only add the lines that will be placed instead of the comment. Do not accidentally add extra lines into your response, only cover the place with comments. Do not commentate your response. The solution may take more or less lines than the source comment"
 
 groq_client = groq.Groq(api_key=read(pathlib.Path(__file__).parent/"token.txt").strip())
 completion = groq_client.chat.completions.create(
@@ -54,9 +54,9 @@ print()
 for line in replacement.split("\n"):
     match = re.match(r"(.+):(\d+)\|(.+)", line)
     if match:
-        if file_info is None:
-            file_info = (match.group(1), int(match.group(2)))
         if input_ended:
+            if file_info is None:
+                file_info = (match.group(1), int(match.group(2)))
             output_lines.append(match.group(3))
         else:
             input_lines.append(match.group(3))
